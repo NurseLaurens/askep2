@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIMRS Klinik - Laurens Fixed Edition</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+
+/* UI STYLE */
+body {margin:0;font-family:'Poppins',sans-serif;background:#eef3f8; color: #333;}
+.login {display:flex;justify-content:center;align-items:center;height:100vh;background:linear-gradient(135deg,#36d1dc,#5b86e5); position:fixed; width:100%; top:0; z-index:9999;}
+.login-box {background:white;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,0.2); width: 300px;}
+
+.sidebar {width:240px;height:100vh;background:linear-gradient(180deg,#1f3c88,#2a5298);position:fixed;color:white;padding:20px; z-index: 100;}
+.sidebar p {padding:12px;border-radius:8px;cursor:pointer; transition: 0.2s;}
+.sidebar p:hover {background:rgba(255,255,255,0.2);}
+
+.header {margin-left:260px;padding:15px;background:white;box-shadow:0 2px 10px rgba(0,0,0,0.1); font-weight: bold; position: sticky; top: 0; z-index: 50;}
+.content {margin-left:260px;padding:20px; min-height: 100vh;}
+
+.card {background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #eee; display: none;}
+input, textarea, select {width:100%;padding:12px;border-radius:10px;border:1px solid #ccc;margin-bottom:10px; box-sizing: border-box; font-family: inherit;}
+button {padding:12px;border:none;border-radius:10px;cursor:pointer;font-weight:bold; transition: 0.3s;}
+
+.btn1 {background:#28a745;color:white;}
+.btn2 {background:#17a2b8;color:white;}
+.btn-new {background:#ffc107;color:black;}
+.btn-small {padding: 6px 12px; font-size: 11px; background: #1f3c88; color: white;}
+
+.hasil {margin-top:20px;padding:20px;background:#fdfdfd;border-radius:12px; border: 1px solid #e0e0e0;}
+table {width:100%;border-collapse:collapse; background: white;}
+th {background:#1f3c88;color:white; text-align: left; padding:12px;}
+td {padding:12px;border:1px solid #eee;}
+
+/* PRINT STYLING - OPTIMALISASI 1 HALAMAN */
+@media print {
+    body * { visibility: hidden !important; }
+    #printArea, #printArea * { visibility: visible !important; }
+    #printArea { 
+        position: absolute; left: 0; top: 0; width: 100%; 
+        color: black !important; background: white !important; 
+        font-size: 11px !important; /* Perkecil font agar muat 1 halaman */
+    }
+    table { border: 1px solid black !important; width: 100% !important; margin-bottom: 5px; }
+    td, th { border: 1px solid black !important; color: black !important; padding: 6px !important; line-height: 1.2; }
+    .kop h2 { font-size: 18px !important; margin-bottom: 0px; }
+    .kop p { font-size: 10px !important; margin: 1px 0; }
+    center h3 { margin: 8px 0 !important; font-size: 13px !important; }
+    .table-identitas td { padding: 2px 0 !important; }
+    .footer-print { margin-top: 20px !important; font-size: 10px !important; }
+}
+
+/* KOP & FOOTER */
+.kop {text-align:center; border-bottom:3px solid black; margin-bottom: 20px; padding-bottom: 10px;}
+.kop h2 {margin: 0; font-size: 22px;}
+.kop p {margin: 2px 0; font-size: 14px;}
+.footer-print {text-align:right; margin-top:40px; font-weight: bold;}
+.table-identitas td { border: none !important; padding: 3px 0 !important; }
+.col-label { width: 180px; font-weight: bold; }
+</style>
+</head>
+
+<body>
+
+<div id="loginPage" class="login">
+<div class="login-box">
+<center><h3 style="color:#1f3c88;">LOGIN SIMRS</h3></center>
+<input id="userInput" type="text" placeholder="Username" onkeydown="if(event.key==='Enter') login()">
+<input id="passInput" type="password" placeholder="Password" onkeydown="if(event.key==='Enter') login()">
+<button style="width:100%; background:#1f3c88; color:white;" onclick="login()">Masuk</button>
+</div>
+</div>
+
+<div id="app" style="display:none">
+<div class="sidebar">
+<h2 style="text-align:center;">🏥 SIMRS</h2>
+<p onclick="showPage('form')">🏠 Asesmen Pasien</p>
+<p onclick="showPage('data')">📂 Data Pasien</p>
+<p onclick="showPage('laporan')">📝 Laporan Terakhir</p>
+<div id="adminMenu"><p onclick="showPage('setting')">⚙️ Setting User</p></div>
+<p onclick="location.reload()" style="color: #ffc107; margin-top: 30px;">🚪 Logout</p>
+</div>
+
+<div class="header">KLINIK CHAN SEJAHTERA | User: <span id="displayUser" style="color:#28a745;"></span></div>
+
+<div class="content">
+ <div id="form" class="card" style="display:block;">
+  <h3 style="color:#1f3c88;">Form Asesmen Keperawatan</h3>
+  
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+    <div>
+        <label style="font-size:11px; font-weight:bold;">Nomor RM:</label>
+        <input id="noRM" readonly style="background:#f9f9f9; color:red; font-weight:bold;">
+    </div>
+    <div>
+        <label style="font-size:11px; font-weight:bold;">Tanggal Berobat/Periksa:</label>
+        <input id="tglBerobatInput" type="date">
+    </div>
+  </div>
+
+  <input id="nama" placeholder="Nama Lengkap Pasien">
+  
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+    <div>
+        <label style="font-size:11px; font-weight:bold;">Tanggal Lahir:</label>
+        <input id="ttl" type="date" onchange="hitungUmur()">
+    </div>
+    <div>
+        <label style="font-size:11px; font-weight:bold;">Umur:</label>
+        <input id="umur" placeholder="Otomatis" readonly>
+    </div>
+  </div>
+
+  <select id="jk"><option>Laki-laki</option><option>Perempuan</option></select>
+  <textarea id="keluhan" placeholder="Keluhan Utama (Diagnosis Mandiri)"></textarea>
+  <textarea id="riwayat" placeholder="Riwayat Penyakit Dahulu"></textarea>
+  
+  <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+    <input id="td" placeholder="TD (Contoh: 120/80)">
+    <input id="suhu" placeholder="Suhu (°C)">
+    <input id="nadi" placeholder="Nadi (x/mnt)">
+  </div>
+
+  <div style="display: flex; gap: 10px; margin-top: 15px;">
+   <button class="btn1" style="flex: 2;" onclick="proses()">PROSES & SIMPAN DATA</button>
+   <button class="btn-new" style="flex: 1;" onclick="newPatient()">PASIEN BARU</button>
+   <button class="btn2" style="flex: 1;" onclick="cetak()">CETAK</button>
+  </div>
+  <div id="output" class="hasil">Pratinjau laporan...</div>
+ </div>
+
+ <div id="data" class="card">
+  <h3>Data Rekam Medis</h3>
+  <table>
+    <thead><tr><th>No. RM</th><th>Nama Pasien</th><th>Tgl Periksa</th><th>Aksi</th></tr></thead>
+    <tbody id="tabelBody"></tbody>
+  </table>
+ </div>
+
+ <div id="laporan" class="card">
+  <h3>Laporan Terkini</h3>
+  <div id="laporanIsi">Belum ada laporan diproses.</div>
+ </div>
+
+ <div id="setting" class="card">
+  <h3>Tambah User</h3>
+  <input id="newUser" placeholder="Username Baru"><input id="newPass" placeholder="Password Baru">
+  <button onclick="tambahUser()" style="background:#1f3c88; color:white; width:100%;">SIMPAN</button>
+ </div>
+</div>
+</div>
+
+<div id="printArea"></div>
+
+<script>
+let users = { admin: "123" };
+let currentUser = "admin";
+let rmCounter = 1;
+let historyLaporan = {};
+
+// Set default tanggal berobat ke hari ini
+window.onload = function() { 
+    updateRMDisplay(); 
+    document.getElementById('tglBerobatInput').valueAsDate = new Date();
+};
+
+function login() {
+    let u = document.getElementById("userInput").value.trim();
+    let p = document.getElementById("passInput").value.trim();
+    if (users[u] && users[u] === p) {
+        currentUser = u;
+        document.getElementById("displayUser").innerText = u;
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        document.getElementById("adminMenu").style.display = (u === "admin") ? "block" : "none";
+    } else { alert("Maaf, Username atau Password salah."); }
+}
+
+function updateRMDisplay() {
+    let thn = new Date().getFullYear();
+    document.getElementById("noRM").value = thn + "-" + String(rmCounter).padStart(3, '0');
+}
+
+function showPage(id){
+    ["form","data","laporan","setting"].forEach(x => document.getElementById(x).style.display = "none");
+    document.getElementById(id).style.display = "block";
+}
+
+function hitungUmur(){
+    let ttl = document.getElementById("ttl").value;
+    if(!ttl) return;
+    document.getElementById("umur").value = (new Date().getFullYear() - new Date(ttl).getFullYear()) + " Tahun";
+}
+
+function interpretasiTTV(td, suhu, nadi){
+    let sistol = parseInt((td||"0/0").split("/")[0]) || 0;
+    let s = parseFloat(suhu) || 0;
+    let n = parseInt(nadi) || 0;
+    return {
+        tdKet: sistol < 90 ? "Hipotensi" : sistol <=120 ? "Normal" : "Hipertensi",
+        suhuKet: s < 36.5 ? "Hipotermia" : s <=37.5 ? "Normal" : "Hipertermia",
+        nadiKet: n < 60 ? "Bradikardia" : n <=100 ? "Normal" : "Takikardia"
+    };
+}
+
+function getLogic(k){
+    k = k.toLowerCase();
+    if(k.includes("nyeri")) return { d: "Nyeri Akut (D.0077)", k: "Tingkat Nyeri Menurun", r: "Manajemen Nyeri: Identifikasi lokasi & skala." };
+    if(k.includes("sesak")) return { d: "Pola Napas Tidak Efektif (D.0005)", k: "Pola Napas Membaik", r: "Berikan posisi semi-fowler & monitor respirasi." };
+    if(k.includes("demam")) return { d: "Hipertermia (D.0130)", k: "Termoregulasi Membaik", r: "Kompres hangat & monitor suhu tubuh." };
+    return { d: "Observasi Lanjutan", k: "Status Stabil", r: "Monitor TTV berkala." };
+}
+
+function proses(){
+    const tglBerobatRaw = document.getElementById("tglBerobatInput").value;
+    const tglLahirRaw = document.getElementById("ttl").value;
+    
+    const d = {
+        rm: document.getElementById("noRM").value,
+        nm: document.getElementById("nama").value,
+        tglB: tglBerobatRaw ? new Date(tglBerobatRaw).toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'}) : "-",
+        ttl: tglLahirRaw ? new Date(tglLahirRaw).toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'}) : "-",
+        u: document.getElementById("umur").value,
+        jk: document.getElementById("jk").value,
+        kl: document.getElementById("keluhan").value,
+        rw: document.getElementById("riwayat").value,
+        td: document.getElementById("td").value,
+        s: document.getElementById("suhu").value,
+        n: document.getElementById("nadi").value,
+        user: currentUser
+    };
+
+    if(!d.nm || !d.kl) { alert("Nama dan Keluhan wajib diisi!"); return; }
+    
+    const ttv = interpretasiTTV(d.td, d.s, d.n);
+    const med = getLogic(d.kl);
+
+    const reportHTML = `
+    <div class="kop">
+        <h2>KLINIK CHAN SEJAHTERA</h2>
+        <p>Nurse Laurens IKBIS ( 2411411029 )</p>
+        <p>Surabaya</p>
+    </div>
+    <center><h3 style="text-decoration: underline;">LAPORAN ASUHAN KEPERAWATAN</h3></center>
+    
+    <table class="table-identitas">
+        <tr><td class="col-label">No. Rekam Medis</td><td>: ${d.rm}</td></tr>
+        <tr><td class="col-label">Nama Pasien</td><td>: ${d.nm}</td></tr>
+        <tr><td class="col-label">Tanggal Lahir</td><td>: ${d.ttl}</td></tr>
+        <tr><td class="col-label">Jenis Kelamin / Umur</td><td>: ${d.jk} / ${d.u}</td></tr>
+        <tr><td class="col-label">Tanggal Pemeriksaan</td><td>: ${d.tglB}</td></tr>
+    </table>
+    
+    <br>
+    <table border="1">
+        <tr style="background:#f2f2f2;"><th colspan="2">I. DATA PEMERIKSAAN</th></tr>
+        <tr><td width="200"><b>Keluhan Utama</b></td><td>${d.kl}</td></tr>
+        <tr><td><b>Riwayat Penyakit</b></td><td>${d.rw}</td></tr>
+        <tr><td><b>Hasil TTV</b></td><td>TD: ${d.td} (${ttv.tdKet}) | S: ${d.s}°C (${ttv.suhuKet}) | N: ${d.n}x/m (${ttv.nadiKet})</td></tr>
+        
+        <tr style="background:#f2f2f2;"><th colspan="2">II. ANALISIS DATA (SOAP)</th></tr>
+        <tr><td><b>Subjektif (S)</b></td><td>Pasien mengeluh: ${d.kl}</td></tr>
+        <tr><td><b>Objektif (O)</b></td><td>Kesadaran CM, TTV: ${d.td}, S: ${d.s}, N: ${d.n}.</td></tr>
+        <tr><td><b>Asesmen (A)</b></td><td>${med.d}</td></tr>
+        <tr><td><b>Planning (P)</b></td><td>${med.r}</td></tr>
+        
+        <tr style="background:#f2f2f2;"><th colspan="2">III. RENCANA ASUHAN</th></tr>
+        <tr><td><b>Diagnosis</b></td><td>${med.d}</td></tr>
+        <tr><td><b>Kriteria Hasil</b></td><td>${med.k}</td></tr>
+        <tr><td><b>Intervensi</b></td><td>${med.r}</td></tr>
+    </table>
+    
+    <div class="footer-print">
+        Perawat Pelaksana: ${d.user}<br>
+        Dicetak pada: ${new Date().toLocaleString('id-ID')}
+    </div>`;
+
+    historyLaporan[d.rm] = reportHTML;
+    document.getElementById("output").innerHTML = reportHTML;
+    document.getElementById("laporanIsi").innerHTML = reportHTML;
+    document.getElementById("printArea").innerHTML = reportHTML;
+
+    let tbody = document.getElementById("tabelBody");
+    let row = tbody.insertRow();
+    row.innerHTML = `<td>${d.rm}</td><td>${d.nm}</td><td>${d.tglB}</td><td><button class="btn-small" onclick="reprint('${d.rm}')">Cetak</button></td>`;
+    
+    alert("Data Pasien " + d.nm + " Berhasil Disimpan.");
+}
+
+function reprint(id) {
+    if(historyLaporan[id]) {
+        document.getElementById("printArea").innerHTML = historyLaporan[id];
+        window.print();
+    }
+}
+
+function newPatient() {
+    document.querySelectorAll('#form input, #form textarea').forEach(i => { 
+        if(i.id !== 'noRM' && i.id !== 'tglBerobatInput') i.value = ''; 
+    });
+    rmCounter++;
+    updateRMDisplay();
+    document.getElementById('tglBerobatInput').valueAsDate = new Date();
+}
+
+function cetak() { window.print(); }
+
+function tambahUser() {
+    let u = document.getElementById("newUser").value.trim();
+    let p = document.getElementById("newPass").value.trim();
+    if(u && p) { users[u] = p; alert("User " + u + " berhasil ditambahkan."); }
+}
+</script>
+</body>
+</html>
