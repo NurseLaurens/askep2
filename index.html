@@ -155,7 +155,7 @@ td {padding:12px;border:1px solid #eee;}
 <div id="printArea"></div>
 
 <script>
-let users = { admin: "123" };
+let users = { admin: "123", laurens: "123" };
 let currentUser = "admin";
 let rmCounter = 1;
 let historyLaporan = {};
@@ -174,7 +174,7 @@ function login() {
         document.getElementById("displayUser").innerText = u;
         document.getElementById("loginPage").style.display = "none";
         document.getElementById("app").style.display = "block";
-        document.getElementById("adminMenu").style.display = (u === "admin") ? "block" : "none";
+        document.getElementById("adminMenu").style.display = (u === "admin" || u === "laurens") ? "block" : "none";
     } else { alert("Maaf, Username atau Password salah."); }
 }
 
